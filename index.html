@@ -636,6 +636,14 @@
   }
   .speed-select:focus{ outline:none; border-color:var(--brass-dim); }
 
+  .block-summary{
+    text-align:center;
+    color: var(--bone-dim);
+    font-size: 13px;
+    padding: 14px 0 6px;
+  }
+  .block-summary b{ color: var(--brass); font-weight: 500; }
+
   .playhead{
     position: absolute;
     top: 0; bottom: 0;
@@ -825,8 +833,35 @@ function renderBlockContent(){
     list.className = 'track-list';
     block.tracks.forEach((t, idx) => list.appendChild(renderTrack(t, idx, block)));
     container.appendChild(list);
+
+    const summary = document.createElement('div');
+    summary.className = 'block-summary mono';
+    summary.id = 'blockSummary';
+    summary.innerHTML = getBlockSummaryHTML(block);
+    container.appendChild(summary);
   }
   container.appendChild(dz);
+}
+
+function getBlockDuration(block){
+  const loaded = block.tracks.filter(t => t.buffer);
+  if(!loaded.length) return 0;
+  let total = loaded.reduce((sum, t) => sum + (t.trimEnd - t.trimStart) / (t.speed || 1), 0);
+  if(block.crossfade && loaded.length > 1){
+    total -= block.crossfadeSec * (loaded.length - 1);
+  }
+  return Math.max(0, total);
+}
+
+function getBlockSummaryHTML(block){
+  const dur = getBlockDuration(block);
+  const n = block.tracks.length;
+  const loaded = block.tracks.filter(t => t.buffer).length;
+  const mins = Math.floor(dur / 60);
+  const secs = Math.floor(dur % 60);
+  const timeStr = mins > 0 ? `${mins} min ${secs}s` : `${secs}s`;
+  const pending = n - loaded > 0 ? ` · ${n - loaded} cargando…` : '';
+  return `🎶 ${n} canción${n!==1?'es':''} · duración total: <b>${timeStr}</b>${pending}`;
 }
 
 // ---------- Manejo de archivos ----------
