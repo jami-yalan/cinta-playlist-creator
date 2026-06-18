@@ -30,9 +30,6 @@
   body{
     margin:0;
     background: var(--bg);
-    background-image:
-      radial-gradient(circle at 15% 0%, rgba(193,122,86,0.05), transparent 45%),
-      radial-gradient(circle at 85% 100%, rgba(176,137,104,0.06), transparent 50%);
     color: var(--bone);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     min-height: 100vh;
@@ -636,13 +633,25 @@
   }
   .speed-select:focus{ outline:none; border-color:var(--brass-dim); }
 
-  .block-summary{
-    text-align:center;
-    color: var(--bone-dim);
-    font-size: 13px;
-    padding: 14px 0 6px;
+  .block-sticky{
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: 16px 0 4px;
   }
-  .block-summary b{ color: var(--brass); font-weight: 500; }
+
+  .block-summary{
+    text-align:left;
+    color: var(--bone-dim);
+    font-size: 12px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 6px 0 10px;
+  }
+  .block-summary b{ color: var(--brass); font-weight: 400; }
 
   .playhead{
     position: absolute;
@@ -757,6 +766,10 @@ function renderBlockContent(){
 
   container.innerHTML = '';
 
+  // sticky wrapper: header + summary + crossfade
+  const sticky = document.createElement('div');
+  sticky.className = 'block-sticky';
+
   // header
   const header = document.createElement('div');
   header.className = 'block-header';
@@ -766,12 +779,16 @@ function renderBlockContent(){
     </div>
     <button class="btn btn-ghost" id="editBlockBtn">✏️ Editar momento</button>
   `;
-  container.appendChild(header);
-  document.getElementById('blockNameInput').oninput = (e) => {
-    block.name = e.target.value;
-    renderBlockNav();
-  };
-  document.getElementById('editBlockBtn').onclick = () => openBlockEditModal(block);
+  sticky.appendChild(header);
+
+  // summary (siempre visible si hay tracks)
+  if(block.tracks.length > 0){
+    const summary = document.createElement('div');
+    summary.className = 'block-summary';
+    summary.id = 'blockSummary';
+    summary.innerHTML = getBlockSummaryHTML(block);
+    sticky.appendChild(summary);
+  }
 
   // panel de crossfade / repeat
   const panel = document.createElement('div');
@@ -790,7 +807,8 @@ function renderBlockContent(){
       <span class="toggle-label ${block.repeat ? 'active' : ''}" id="repeatLabel">🔁 Repetir este bloque en bucle</span>
     </div>
   `;
-  container.appendChild(panel);
+  sticky.appendChild(panel);
+  container.appendChild(sticky);
 
   document.getElementById('crossfadeToggle').onclick = () => {
     block.crossfade = !block.crossfade;
@@ -833,12 +851,6 @@ function renderBlockContent(){
     list.className = 'track-list';
     block.tracks.forEach((t, idx) => list.appendChild(renderTrack(t, idx, block)));
     container.appendChild(list);
-
-    const summary = document.createElement('div');
-    summary.className = 'block-summary mono';
-    summary.id = 'blockSummary';
-    summary.innerHTML = getBlockSummaryHTML(block);
-    container.appendChild(summary);
   }
   container.appendChild(dz);
 }
