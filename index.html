@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinta — Creador de Playlists</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  @import url('https://cdnjs.cloudflare.com/ajax/libs/fontsource-fraunces/5.0.0/index.css');
+</style>
+<style>
+  :root{
+    --bg: #FAF6F0;
+    --surface: #FFFFFF;
+    --surface-raised: #F5EEE4;
+    --brass: #A85935;
+    --brass-dim: #D9A487;
+    --brass-soft: #F0DCC8;
+    --lavender: #B08968;
+    --lavender-bright: #8A4A2A;
+    --bone: #3D332B;
+    --bone-dim: #766859;
+    --line: #E8DCCC;
+    --danger: #C0594A;
+    --radius: 10px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(193,122,86,0.05), transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(176,137,104,0.06), transparent 50%);
+    color: var(--bone);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @font-face{
+    font-family: 'Fraunces';
+    src: local('Fraunces');
+  }
+
+  .display{
+    font-family: 'Georgia', 'Iowan Old Style', serif;
+    font-optical-sizing: auto;
+  }
+
+  .mono{
+    font-family: 'SF Mono', 'JetBrains Mono', Consolas, monospace;
+  }
+
+  header{
+    padding: 36px 32px 24px;
+    border-bottom: 1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap: 14px;
+  }
+
+  .brand .wordmark{
+    height: 34px;
+    display:block;
+  }
+  .brand .wordmark svg{
+    height: 34px;
+    width: auto;
+    display: block;
+  }
+
+  .brand .divider{
+    color: var(--line);
+    font-size: 22px;
+    font-weight: 300;
+  }
+
+  .brand h1{
+    font-size: 24px;
+    margin:0;
+    letter-spacing: 0.01em;
+    font-weight: 500;
+    color: var(--bone);
+  }
+
+  main{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 100px;
+  }
+
+  .block-nav{
+    display:flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .block-tab{
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--bone-dim);
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s;
+    font-family: inherit;
+  }
+
+  .block-tab.active{
+    border-color: var(--brass);
+    color: var(--brass);
+    background: rgba(193,122,86,0.06);
+  }
+
+  .block-tab .count{
+    color: var(--bone-dim);
+    margin-left: 6px;
+    font-size: 12px;
+  }
+
+  .add-block-btn{
+    background: transparent;
+    border: 1px dashed var(--line);
+    color: var(--bone-dim);
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .add-block-btn:hover{ border-color: var(--brass-dim); color: var(--brass); }
+
+  .block-header{
+    display:flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 22px;
+    gap: 16px;
+  }
+
+  .block-title-row{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+
+  .block-title-row input[type=text]{
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid transparent;
+    color: var(--bone);
+    font-size: 22px;
+    font-family: 'Georgia', serif;
+    padding: 2px 0;
+    width: 280px;
+  }
+  .block-title-row input[type=text]:hover, .block-title-row input[type=text]:focus{
+    border-bottom: 1px solid var(--brass-dim);
+    outline: none;
+  }
+
+  .icon-btn{
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--bone-dim);
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 15px;
+  }
+  .icon-btn:hover{ border-color: var(--danger); color: var(--danger); }
+
+  .crossfade-panel{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 22px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(61,51,43,0.05);
+  }
+
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+
+  .toggle{
+    width: 38px;
+    height: 21px;
+    background: var(--line);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink:0;
+  }
+  .toggle.on{ background: var(--lavender-bright); }
+  .toggle .knob{
+    width: 16px; height: 16px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    position: absolute;
+    top: 2.5px; left: 2.5px;
+    transition: left 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .toggle.on .knob{ left: 19.5px; }
+
+  .toggle-label{ font-size: 13px; color: var(--bone-dim); }
+  .toggle-label.active{ color: var(--bone); }
+
+  .crossfade-slider-group{
+    display:flex;
+    align-items:center;
+    justify-content: center;
+    gap: 10px;
+    opacity: 0.6;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    flex: 1;
+  }
+  .crossfade-slider-group.enabled{ opacity:1; pointer-events:auto; }
+
+  .crossfade-slider-group input[type=range]{
+    width: 140px;
+    accent-color: var(--brass);
+  }
+  .crossfade-slider-group input[type=range].hidden-slider{
+    display: none;
+  }
+
+  .crossfade-value{
+    color: var(--bone-dim);
+    font-size: 13px;
+    min-width: 40px;
+    text-align: center;
+  }
+  .crossfade-slider-group.enabled .crossfade-value{
+    color: var(--brass);
+  }
+
+  .repeat-row{
+    margin-left: auto;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+
+  .dropzone{
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 36px;
+    text-align:center;
+    color: var(--bone-dim);
+    margin-bottom: 22px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 14px;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color: var(--brass-dim);
+    background: var(--brass-soft);
+  }
+  .dropzone .dz-title{
+    color: var(--bone);
+    font-size: 16px;
+    margin-bottom: 6px;
+    font-family: 'Georgia', serif;
+  }
+
+  .track-list{
+    display:flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+
+  .track{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: 0 1px 3px rgba(61,51,43,0.05);
+  }
+
+  .track-top{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-bottom: 10px;
+  }
+
+  .track-name-group{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .drag-handle{
+    color: var(--bone-dim);
+    cursor: grab;
+    font-size: 14px;
+    user-select:none;
+  }
+
+  .track-name{
+    font-size: 14px;
+    color: var(--bone);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 360px;
+  }
+
+  .track-order{
+    color: var(--brass);
+    font-size: 12px;
+    background: rgba(193,122,86,0.08);
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+
+  .track-actions{
+    display:flex;
+    gap: 8px;
+    align-items:center;
+  }
+
+  .play-btn{
+    background: transparent;
+    border: 1px solid var(--brass-dim);
+    color: var(--brass);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 12px;
+  }
+  .play-btn:hover{ background: rgba(193,122,86,0.1); }
+
+  .waveform-wrap{
+    position: relative;
+    height: 84px;
+    background: #0B0A0D;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+
+  canvas.waveform{
+    width: 100%;
+    height: 100%;
+    display:block;
+  }
+
+  .fade-handle{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    cursor: ew-resize;
+    z-index: 3;
+  }
+  .fade-handle::after{
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--brass);
+    box-shadow: 0 0 0 3px rgba(193,122,86,0.18);
+  }
+  .fade-handle::before{
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--brass);
+    opacity: 0.6;
+  }
+
+  .trim-handle{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 14px;
+    cursor: ew-resize;
+    z-index: 4;
+  }
+  .trim-handle::after{
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 4px;
+    height: 100%;
+    background: var(--lavender-bright);
+    box-shadow: 0 0 0 1px rgba(139,114,168,0.4);
+  }
+  .trim-handle::before{
+    content: '✂';
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--lavender-bright);
+  }
+
+  .discard-shade{
+    position: absolute;
+    top: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(0,0,0,0.3),
+      rgba(0,0,0,0.3) 4px,
+      rgba(0,0,0,0.5) 4px,
+      rgba(0,0,0,0.5) 8px
+    );
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .fade-shade{
+    position: absolute;
+    top: 0; bottom: 0;
+    background: rgba(11,10,13,0.72);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .track-meta-row{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    font-size: 12px;
+    color: var(--bone-dim);
+    margin-top: 6px;
+  }
+
+  .fade-readout{
+    display:flex;
+    gap: 16px;
+  }
+  .fade-readout span b{ color: var(--brass); font-weight: 500; }
+
+  .footer-bar{
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(250,246,240,0.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    padding: 16px 24px;
+    display:flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .btn{
+    font-family: inherit;
+    font-size: 14px;
+    padding: 11px 22px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--bone);
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+  .btn:hover{ border-color: var(--brass-dim); }
+  .btn:disabled{ opacity: 0.35; cursor: not-allowed; }
+
+  .btn-primary{
+    background: var(--brass);
+    color: #FFFFFF;
+    border-color: var(--brass);
+    font-weight: 600;
+  }
+  .btn-primary:hover{ background: var(--lavender-bright); }
+
+  .btn-ghost{ color: var(--bone-dim); }
+
+  .empty-state{
+    text-align:center;
+    color: var(--bone-dim);
+    padding: 60px 20px;
+    font-size: 14px;
+  }
+
+  .progress-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(250,246,240,0.92);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 100;
+  }
+  .progress-overlay.show{ display:flex; }
+
+  .progress-text{
+    color: var(--brass);
+    font-size: 14px;
+    font-family: 'SF Mono', monospace;
+  }
+
+  .spinner{
+    width: 28px; height: 28px;
+    border: 2px solid var(--line);
+    border-top-color: var(--brass);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  input[type=file]{ display:none; }
+
+  ::-webkit-scrollbar{ height: 6px; width: 6px; }
+  ::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 3px; }
+
+  .modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(61,51,43,0.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index: 200;
+  }
+
+  .modal{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    min-width: 340px;
+    max-width: 420px;
+    box-shadow: 0 8px 32px rgba(61,51,43,0.15);
+  }
+
+  .modal h2{
+    font-family: 'Georgia', serif;
+    font-size: 18px;
+    margin: 0 0 20px;
+    color: var(--bone);
+    font-weight: 500;
+  }
+
+  .modal p{ font-size: 14px; color: var(--bone-dim); margin: 0 0 24px; line-height: 1.5; }
+
+  .modal-input{
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--bone);
+    background: var(--bg);
+    margin-bottom: 16px;
+  }
+  .modal-input:focus{ outline: none; border-color: var(--brass-dim); }
+
+  .modal-divider{ border:none; border-top: 1px solid var(--line); margin: 20px 0; }
+
+  .modal-row{ display:flex; gap: 10px; justify-content: flex-end; }
+  .modal-row.space-between{ justify-content: space-between; }
+
+  .btn-danger{
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+    font-weight: 600;
+  }
+  .btn-danger:hover{ opacity: 0.88; }
+
+  canvas.envelope-canvas{
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 3;
+    cursor: crosshair;
+  }
+
+  .speed-control{ display:flex; align-items:center; gap:6px; }
+  .speed-label{ font-size:12px; color:var(--bone-dim); font-family: 'SF Mono', monospace; }
+  .speed-select{
+    font-size:12px;
+    font-family: 'SF Mono', monospace;
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+  .speed-select:focus{ outline:none; border-color:var(--brass-dim); }
+
+  .playhead{
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: rgba(255,255,255,0.95);
+    z-index: 6;
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 0 6px rgba(255,255,255,0.5);
+  }
+  .playhead.active{ display: block; }
+
+  .playhead-time{
+    position: absolute;
+    bottom: 5px;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    font-size: 11px;
+    font-family: 'SF Mono', 'JetBrains Mono', monospace;
+    padding: 2px 6px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 7;
+    display: none;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+  .playhead-time.active{ display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="wordmark"><svg width="127" height="37" viewBox="0 0 127 37" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.92207 23.2005C6.79975 22.4778 6.47728 21.6994 5.95465 20.8654C5.43202 20.0203 4.68699 19.2363 3.71957 18.5136C2.76327 17.7908 1.80697 17.3293 0.850664 17.1291V16.4286C1.79585 16.2062 2.70211 15.7948 3.56945 15.1943C4.44792 14.5827 5.18182 13.8488 5.77117 12.9926C6.37164 12.1141 6.75527 11.2468 6.92207 10.3905H7.62262C7.7227 10.9465 7.92285 11.5192 8.22309 12.1086C8.52332 12.6868 8.90695 13.2428 9.37398 13.7765C9.85214 14.2992 10.3859 14.7717 10.9752 15.1943C11.8537 15.817 12.7488 16.2284 13.6607 16.4286V17.1291C13.0491 17.2515 12.4152 17.5017 11.7592 17.8797C11.1142 18.2578 10.5138 18.7082 9.95777 19.2308C9.40178 19.7423 8.94587 20.2816 8.59004 20.8487C8.06741 21.6827 7.74494 22.4666 7.62262 23.2005H6.92207ZM16.0478 10.2071C16.2702 10.2071 16.4648 10.2849 16.6316 10.4406C16.8095 10.5851 16.8985 10.8187 16.8985 11.1411C16.8985 11.4525 16.8095 11.686 16.6316 11.8417C16.4648 11.9974 16.2702 12.0752 16.0478 12.0752C15.8032 12.0752 15.5975 11.9974 15.4307 11.8417C15.2639 11.686 15.1805 11.4525 15.1805 11.1411C15.1805 10.8187 15.2639 10.5851 15.4307 10.4406C15.5975 10.2849 15.8032 10.2071 16.0478 10.2071ZM19.1439 18.3301L19.6609 16.7622L18.4099 15.9115H19.9612L20.5116 14.2436L21.062 15.9115H22.6132L21.3622 16.7622L21.8793 18.3301L20.5116 17.346L19.1439 18.3301Z" fill="#A06E2F"/><path d="M40.9799 7.68492C40.0792 5.4832 37.6773 4.11547 35.2088 4.11547C28.6703 4.11547 29.0706 15.3242 29.0706 15.3242C29.0706 15.3242 28.5369 26.4996 35.2088 26.4996C38.3445 26.4996 40.9799 23.4973 42.5478 19.3273V22.8634C41.1801 25.0318 39.1785 27.1001 35.2088 27.1001C25.4345 27.1001 26.0683 15.4243 26.0683 15.4243C26.0683 15.4243 25.5012 3.515 35.2088 3.515C37.4438 3.515 39.4788 4.18219 41.08 5.75008C41.914 6.41726 42.1475 3.64844 42.1475 3.64844H42.4811V12.8223H41.8806C41.8806 12.8223 41.7138 9.68648 40.9799 7.68492ZM50.4717 3.64844V3.98203C50.4717 3.98203 48.4034 4.34898 48.4034 6.8843V23.7641C48.4034 26.3328 50.4717 26.6664 50.4717 26.6664V27H43.3995V26.6664C43.3995 26.6664 45.5012 26.3328 45.5012 23.7641V6.8843C45.5012 4.34898 43.3995 3.98203 43.3995 3.98203V3.64844H50.4717ZM66.2919 6.31719V24.3312C66.2919 26.5663 68.3602 26.6664 68.3602 26.6664V27H61.288V26.6664C61.288 26.6664 63.3896 26.5997 63.3896 24.3312V23.7308L56.4175 7.31797V24.3312C56.4175 26.5663 58.4858 26.6664 58.4858 26.6664V27H51.4136V26.6664C51.4136 26.6664 53.4819 26.5997 53.4819 24.3312V6.31719C53.4819 4.08211 51.4136 3.98203 51.4136 3.98203V3.64844H58.4858V3.98203C58.4858 3.98203 56.8845 4.04875 56.4842 5.58328L63.3896 21.7959V6.31719C63.3896 4.08211 61.288 3.98203 61.288 3.98203V3.64844H68.3602V3.98203C68.3602 3.98203 66.2919 4.04875 66.2919 6.31719ZM72.0714 3.64844H78.9434H81.879V10.5538H81.5454C81.5454 10.5538 81.5454 4.2489 78.6432 4.2489H78.2429C77.6424 4.5825 76.8751 5.31641 76.8751 6.8843V23.7641C76.8751 26.2995 78.9434 26.6664 78.9434 26.6664V27H75.7076H75.3406H72.0714V26.6664C72.0714 26.6664 74.173 26.2995 74.173 23.7641V6.8843C74.173 5.31641 73.3724 4.5825 72.7719 4.2489H72.3716C69.4693 4.2489 69.4693 10.5538 69.4693 10.5538H69.1358V3.64844H72.0714ZM80.6682 27L80.7349 26.6664C80.7349 26.6664 82.8699 26.2995 83.3369 23.7641L87.6737 6.8843C88.0406 5.04953 87.0398 4.34898 86.4727 4.11547C86.2059 4.01539 86.0391 3.98203 86.0391 3.98203L85.939 3.64844H93.0112L93.1112 3.98203C93.1112 3.98203 91.1097 4.31562 91.8102 6.8843L96.3471 23.7641C97.0143 26.2995 99.1826 26.6664 99.1826 26.6664L99.2827 27H92.3773L92.2773 26.6664C92.2773 26.6664 94.2788 26.2995 93.5783 23.7641L92.4441 18.9937H85.4052L84.2043 23.7641C83.7706 26.2995 85.7722 26.6664 85.7722 26.6664L85.7388 27H80.6682ZM85.6387 18.3266L92.1772 18.3599L88.6744 5.85016L85.6387 18.3266Z" fill="#A06E2F"/><path d="M103.921 18.3301L104.438 16.7622L103.187 15.9115H104.738L105.288 14.2436L105.839 15.9115H107.39L106.139 16.7622L106.656 18.3301L105.288 17.346L103.921 18.3301ZM109.767 10.2071C109.989 10.2071 110.184 10.2849 110.351 10.4406C110.529 10.5851 110.618 10.8187 110.618 11.1411C110.618 11.4525 110.529 11.686 110.351 11.8417C110.184 11.9974 109.989 12.0752 109.767 12.0752C109.522 12.0752 109.317 11.9974 109.15 11.8417C108.983 11.686 108.9 11.4525 108.9 11.1411C108.9 10.8187 108.983 10.5851 109.15 10.4406C109.317 10.2849 109.522 10.2071 109.767 10.2071ZM118.201 23.2005C118.078 22.4778 117.756 21.6994 117.233 20.8654C116.71 20.0203 115.965 19.2363 114.998 18.5136C114.042 17.7908 113.085 17.3293 112.129 17.1291V16.4286C113.074 16.2062 113.981 15.7948 114.848 15.1943C115.726 14.5827 116.46 13.8488 117.05 12.9926C117.65 12.1141 118.034 11.2468 118.201 10.3905H118.901C119.001 10.9465 119.201 11.5192 119.502 12.1086C119.802 12.6868 120.185 13.2428 120.652 13.7765C121.131 14.2992 121.664 14.7717 122.254 15.1943C123.132 15.817 124.027 16.2284 124.939 16.4286V17.1291C124.328 17.2515 123.694 17.5017 123.038 17.8797C122.393 18.2578 121.792 18.7082 121.236 19.2308C120.68 19.7423 120.224 20.2816 119.869 20.8487C119.346 21.6827 119.023 22.4666 118.901 23.2005H118.201Z" fill="#A06E2F"/></svg></span>
+    <span class="divider">|</span>
+    <h1 class="display">Creador de Playlists</h1>
+  </div>
+  <button class="btn btn-ghost" id="downloadListBtn">📋 Descargar lista de canciones</button>
+</header>
+
+<main>
+  <div class="block-nav" id="blockNav"></div>
+
+  <div id="blockContent"></div>
+</main>
+
+<div class="footer-bar">
+  <button class="btn" id="exportFolderBtn">🗂️ Exportar carpeta (canciones separadas)</button>
+  <button class="btn btn-primary" id="exportMergedBtn">⬆️ Exportar archivo único</button>
+</div>
+
+<div class="progress-overlay" id="progressOverlay">
+  <div class="spinner"></div>
+  <div class="progress-text" id="progressText">Procesando…</div>
+</div>
+
+<script>
+// ---------- Estado ----------
+let blocks = [
+  { id: crypto.randomUUID(), name: 'Momento 1', crossfade: false, crossfadeSec: 3, repeat: false, tracks: [] },
+];
+let activeBlockId = blocks[0].id;
+let audioCtx = null;
+let currentlyPlayingSource = null;
+let currentlyPlayingTrackId = null;
+
+function getAudioCtx(){
+  if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  return audioCtx;
+}
+
+function getActiveBlock(){
+  return blocks.find(b => b.id === activeBlockId);
+}
+
+// ---------- Render de pestañas de bloque ----------
+function renderBlockNav(){
+  const nav = document.getElementById('blockNav');
+  nav.innerHTML = '';
+  blocks.forEach(b => {
+    const tab = document.createElement('button');
+    tab.className = 'block-tab' + (b.id === activeBlockId ? ' active' : '');
+    tab.innerHTML = `${escapeHtml(b.name)}<span class="count">${b.tracks.length}</span>`;
+    tab.onclick = () => { activeBlockId = b.id; renderAll(); };
+    nav.appendChild(tab);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-block-btn';
+  addBtn.textContent = '+ nuevo momento 💐';
+  addBtn.onclick = () => {
+    const nb = { id: crypto.randomUUID(), name: `Momento ${blocks.length + 1}`, crossfade: false, crossfadeSec: 3, repeat: false, tracks: [] };
+    blocks.push(nb);
+    activeBlockId = nb.id;
+    renderAll();
+  };
+  nav.appendChild(addBtn);
+}
+
+function escapeHtml(s){
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+// ---------- Render del contenido del bloque activo ----------
+function renderBlockContent(){
+  const container = document.getElementById('blockContent');
+  const block = getActiveBlock();
+  if(!block){ container.innerHTML = ''; return; }
+
+  container.innerHTML = '';
+
+  // header
+  const header = document.createElement('div');
+  header.className = 'block-header';
+  header.innerHTML = `
+    <div class="block-title-row">
+      <input type="text" value="${escapeHtml(block.name)}" id="blockNameInput" />
+    </div>
+    <button class="btn btn-ghost" id="editBlockBtn">✏️ Editar momento</button>
+  `;
+  container.appendChild(header);
+  document.getElementById('blockNameInput').oninput = (e) => {
+    block.name = e.target.value;
+    renderBlockNav();
+  };
+  document.getElementById('editBlockBtn').onclick = () => openBlockEditModal(block);
+
+  // panel de crossfade / repeat
+  const panel = document.createElement('div');
+  panel.className = 'crossfade-panel';
+  panel.innerHTML = `
+    <div class="toggle-row">
+      <div class="toggle ${block.crossfade ? 'on' : ''}" id="crossfadeToggle"><div class="knob"></div></div>
+      <span class="toggle-label ${block.crossfade ? 'active' : ''}" id="crossfadeLabel">🔀 Crossfade entre canciones</span>
+    </div>
+    <div class="crossfade-slider-group ${block.crossfade ? 'enabled' : ''}" id="crossfadeSliderGroup">
+      <input type="range" min="1" max="10" step="0.5" value="${block.crossfadeSec}" id="crossfadeSlider" class="${block.crossfade ? '' : 'hidden-slider'}">
+      <span class="crossfade-value mono" id="crossfadeValue">${block.crossfadeSec}s</span>
+    </div>
+    <div class="repeat-row">
+      <div class="toggle ${block.repeat ? 'on' : ''}" id="repeatToggle"><div class="knob"></div></div>
+      <span class="toggle-label ${block.repeat ? 'active' : ''}" id="repeatLabel">🔁 Repetir este bloque en bucle</span>
+    </div>
+  `;
+  container.appendChild(panel);
+
+  document.getElementById('crossfadeToggle').onclick = () => {
+    block.crossfade = !block.crossfade;
+    renderBlockContent();
+  };
+  document.getElementById('repeatToggle').onclick = () => {
+    block.repeat = !block.repeat;
+    renderBlockContent();
+  };
+  document.getElementById('crossfadeSlider').oninput = (e) => {
+    block.crossfadeSec = parseFloat(e.target.value);
+    document.getElementById('crossfadeValue').textContent = block.crossfadeSec + 's';
+  };
+
+  // dropzone
+  const dz = document.createElement('div');
+  dz.className = 'dropzone';
+  dz.innerHTML = `
+    <div class="dz-title">🎵 Arrastra tus mp3 aquí</div>
+    <div>o haz clic para elegir archivos · puedes soltar varios a la vez</div>
+    <input type="file" id="fileInput" accept="audio/*" multiple>
+  `;
+  const fileInput = dz.querySelector('input[type=file]');
+  dz.onclick = () => fileInput.click();
+  dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag'); };
+  dz.ondragleave = () => dz.classList.remove('drag');
+  dz.ondrop = (e) => {
+    e.preventDefault();
+    dz.classList.remove('drag');
+    handleFiles(e.dataTransfer.files, block);
+  };
+  fileInput.onchange = (e) => {
+    handleFiles(e.target.files, block);
+    e.target.value = '';
+  };
+
+  // cuando hay canciones: lista primero, dropzone abajo; sin canciones: solo dropzone
+  if(block.tracks.length > 0){
+    const list = document.createElement('div');
+    list.className = 'track-list';
+    block.tracks.forEach((t, idx) => list.appendChild(renderTrack(t, idx, block)));
+    container.appendChild(list);
+  }
+  container.appendChild(dz);
+}
+
+// ---------- Manejo de archivos ----------
+async function handleFiles(fileList, block){
+  const files = Array.from(fileList).filter(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|m4a|aac)$/i));
+  for(const file of files){
+    const id = crypto.randomUUID();
+    const track = {
+      id,
+      file,
+      name: file.name.replace(/\.[^.]+$/, ''),
+      duration: 0,
+      trimStart: 0,
+      trimEnd: 0,
+      nodes: [],
+      speed: 1.0,
+      buffer: null,
+      peaks: null,
+    };
+    block.tracks.push(track);
+    renderBlockContent();
+    renderBlockNav();
+    decodeTrack(track, block);
+  }
+}
+
+async function decodeTrack(track, block){
+  const arrayBuf = await track.file.arrayBuffer();
+  const ctx = getAudioCtx();
+  const audioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
+  track.buffer = audioBuffer;
+  track.duration = audioBuffer.duration;
+  track.trimStart = 0;
+  track.trimEnd = audioBuffer.duration;
+  const defaultIn = Math.min(2, audioBuffer.duration * 0.1);
+  const defaultOut = Math.max(audioBuffer.duration - Math.min(3, audioBuffer.duration * 0.15), defaultIn + 0.3);
+  track.nodes = [{ t: defaultIn, vol: 1 }, { t: defaultOut, vol: 1 }];
+  track.peaks = computePeaks(audioBuffer, 600);
+  // re-render only this track's waveform if still in DOM
+  renderBlockContent();
+}
+
+function computePeaks(buffer, numPeaks){
+  const data = buffer.getChannelData(0);
+  const blockSize = Math.floor(data.length / numPeaks);
+  const peaks = [];
+  for(let i=0;i<numPeaks;i++){
+    let max = 0;
+    const start = i*blockSize;
+    for(let j=0;j<blockSize;j++){
+      const v = Math.abs(data[start+j] || 0);
+      if(v > max) max = v;
+    }
+    peaks.push(max);
+  }
+  return peaks;
+}
+
+// ---------- Render de cada track ----------
+function renderTrack(track, idx, block){
+  const el = document.createElement('div');
+  el.className = 'track';
+  el.draggable = true;
+  el.dataset.trackId = track.id;
+
+  el.innerHTML = `
+    <div class="track-top">
+      <div class="track-name-group">
+        <span class="drag-handle">⠿</span>
+        <span class="track-order mono">${idx+1}</span>
+        <span class="track-name">${escapeHtml(track.name)}</span>
+      </div>
+      <div class="track-actions">
+        <button class="play-btn" data-action="preview" title="Escuchar el fragmento con fades aplicados">▶</button>
+        <button class="icon-btn" data-action="remove" title="Quitar">✕</button>
+      </div>
+    </div>
+    <div class="waveform-wrap" style="position:relative;">
+      <canvas class="waveform"></canvas>
+      <canvas class="envelope-canvas" id="envelope-${track.id}"></canvas>
+      <div class="playhead" id="playhead-${track.id}"></div>
+      <div class="playhead-time" id="playhead-time-${track.id}"></div>
+      ${track.buffer ? `
+        <div class="discard-shade" id="discardLeft-${track.id}" style="left:0;"></div>
+        <div class="discard-shade" id="discardRight-${track.id}" style="right:0;"></div>
+        <div class="trim-handle" id="trimStart-${track.id}" title="Arrastra para marcar dónde empieza el fragmento"></div>
+        <div class="trim-handle" id="trimEnd-${track.id}" title="Arrastra para marcar dónde termina el fragmento"></div>
+      ` : ''}
+    </div>
+    <div class="track-meta-row">
+      <div class="fade-readout mono">
+        ${track.buffer ? `
+          <span>fragmento <b>${formatTime(track.trimStart)} – ${formatTime(track.trimEnd)}</b></span>
+          <span>fade in <b>—</b></span>
+          <span>fade out <b>—</b></span>
+          <span>dura <b>${formatTime(track.trimEnd - track.trimStart)}</b></span>
+        ` : 'decodificando…'}
+      </div>
+      ${track.buffer ? `
+        <div class="speed-control">
+          <span class="speed-label">velocidad</span>
+          <select class="speed-select" data-action="speed">
+            ${[0.5,0.75,1,1.25,1.5,2].map(v=>`<option value="${v}"${Math.abs((track.speed||1)-v)<0.01?' selected':''}>${v}×</option>`).join('')}
+          </select>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  // botón quitar
+  el.querySelector('[data-action="remove"]').onclick = () => {
+    if(currentlyPlayingTrackId === track.id){
+      if(currentlyPlayingSource) currentlyPlayingSource.stop();
+      currentlyPlayingTrackId = null;
+      stopPlayhead();
+    }
+    block.tracks = block.tracks.filter(t => t.id !== track.id);
+    renderBlockContent();
+    renderBlockNav();
+  };
+
+  // botón preview
+  el.querySelector('[data-action="preview"]').onclick = (e) => {
+    previewTrack(track, e.target);
+  };
+
+  // drag reorder
+  el.ondragstart = (e) => { e.dataTransfer.setData('text/plain', track.id); };
+  el.ondragover = (e) => e.preventDefault();
+  el.ondrop = (e) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('text/plain');
+    if(draggedId === track.id) return;
+    const fromIdx = block.tracks.findIndex(t => t.id === draggedId);
+    const toIdx = block.tracks.findIndex(t => t.id === track.id);
+    const [moved] = block.tracks.splice(fromIdx, 1);
+    block.tracks.splice(toIdx, 0, moved);
+    renderBlockContent();
+  };
+
+  // selector de velocidad
+  const speedSel = el.querySelector('[data-action="speed"]');
+  if(speedSel) speedSel.onchange = e => { track.speed = parseFloat(e.target.value); updateFadeReadout(el, track); };
+
+  // dibujar waveform una vez en el DOM
+  if(track.buffer && track.peaks){
+    requestAnimationFrame(() => {
+      const canvas = el.querySelector('canvas.waveform');
+      drawWaveform(canvas, track.peaks);
+      positionFadeHandles(el, track);
+      attachFadeDrag(el, track, block);
+      attachEnvelopeInteraction(el, track);
+    });
+  }
+
+  return el;
+}
+
+function formatTime(sec){
+  const m = Math.floor(sec/60);
+  const s = Math.floor(sec%60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function drawWaveform(canvas, peaks){
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0,0,w,h);
+  const barWidth = w / peaks.length;
+  ctx.fillStyle = '#D9A487';
+  peaks.forEach((p, i) => {
+    const barH = Math.max(2, p * h * 0.9);
+    ctx.fillRect(i*barWidth, (h-barH)/2, Math.max(1, barWidth-1), barH);
+  });
+}
+
+function positionFadeHandles(el, track){
+  const wrap = el.querySelector('.waveform-wrap');
+  const width = wrap.getBoundingClientRect().width;
+  const trimStartHandle = el.querySelector(`#trimStart-${track.id}`);
+  const trimEndHandle = el.querySelector(`#trimEnd-${track.id}`);
+  const discardLeft = el.querySelector(`#discardLeft-${track.id}`);
+  const discardRight = el.querySelector(`#discardRight-${track.id}`);
+  if(!trimStartHandle) return;
+
+  const trimStartPx = (track.trimStart / track.duration) * width;
+  const trimEndPx   = (track.trimEnd   / track.duration) * width;
+
+  trimStartHandle.style.left = (trimStartPx - 7) + 'px';
+  trimEndHandle.style.left   = (trimEndPx   - 7) + 'px';
+  discardLeft.style.width    = trimStartPx + 'px';
+  discardRight.style.width   = (width - trimEndPx) + 'px';
+
+  drawEnvelope(el, track);
+}
+
+// ---------- Envolvente de volumen con nodos ----------
+function getFullEnvelope(track){
+  return [
+    { t: track.trimStart, vol: 0 },
+    ...track.nodes.slice().sort((a,b) => a.t - b.t),
+    { t: track.trimEnd, vol: 0 },
+  ];
+}
+
+function getVolumeAt(t, envelope){
+  if(t <= envelope[0].t) return envelope[0].vol;
+  if(t >= envelope[envelope.length-1].t) return envelope[envelope.length-1].vol;
+  for(let i = 0; i < envelope.length-1; i++){
+    if(t >= envelope[i].t && t <= envelope[i+1].t){
+      const r = (t - envelope[i].t) / (envelope[i+1].t - envelope[i].t);
+      return envelope[i].vol + r * (envelope[i+1].vol - envelope[i].vol);
+    }
+  }
+  return 0;
+}
+
+function drawEnvelope(el, track){
+  const envCanvas = el.querySelector(`#envelope-${track.id}`);
+  if(!envCanvas || !track.nodes) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = envCanvas.getBoundingClientRect();
+  if(!rect.width) return;
+  envCanvas.width = rect.width * dpr;
+  envCanvas.height = rect.height * dpr;
+  const ctx = envCanvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const PAD = 8;
+  const envelope = getFullEnvelope(track);
+
+  function toXY(t, vol){
+    return [(t / track.duration) * w, (1 - vol) * (h - 2*PAD) + PAD];
+  }
+
+  // línea
+  ctx.beginPath();
+  envelope.forEach(({t, vol}, i) => {
+    const [x, y] = toXY(t, vol);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // nodos de usuario (arrastables / eliminables)
+  track.nodes.forEach(({t, vol}) => {
+    const [x, y] = toXY(t, vol);
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(193,122,86,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // puntos fijos de inicio/fin
+  [[track.trimStart,0],[track.trimEnd,0]].forEach(([t,vol]) => {
+    const [x, y] = toXY(t, vol);
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fill();
+  });
+}
+
+function attachEnvelopeInteraction(el, track){
+  const envCanvas = el.querySelector(`#envelope-${track.id}`);
+  if(!envCanvas) return;
+  const PAD = 8;
+
+  function toXY(t, vol, w, h){
+    return [(t / track.duration) * w, (1 - vol) * (h - 2*PAD) + PAD];
+  }
+  function fromXY(px, py, w, h){
+    return {
+      t:   Math.max(track.trimStart + 0.05, Math.min(track.trimEnd - 0.05, (px / w) * track.duration)),
+      vol: Math.max(0, Math.min(1, 1 - (py - PAD) / (h - 2*PAD))),
+    };
+  }
+  function nearestNode(px, py, w, h, threshold = 14){
+    let best = -1, bestD = threshold;
+    track.nodes.forEach(({t, vol}, i) => {
+      const [x, y] = toXY(t, vol, w, h);
+      const d = Math.hypot(px - x, py - y);
+      if(d < bestD){ bestD = d; best = i; }
+    });
+    return best;
+  }
+
+  envCanvas.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    const rect = envCanvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    const px = e.clientX - rect.left, py = e.clientY - rect.top;
+    const idx = nearestNode(px, py, w, h);
+
+    if(idx >= 0){
+      // arrastrar nodo existente
+      const onMove = mv => {
+        const r2 = envCanvas.getBoundingClientRect();
+        const { t, vol } = fromXY(mv.clientX - r2.left, mv.clientY - r2.top, r2.width, r2.height);
+        track.nodes[idx] = { t, vol };
+        track.nodes.sort((a,b) => a.t - b.t);
+        drawEnvelope(el, track);
+        updateFadeReadout(el, track);
+      };
+      const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    } else if(track.nodes.length < 4){
+      // añadir nodo nuevo
+      const { t, vol } = fromXY(px, py, w, h);
+      track.nodes.push({ t, vol });
+      track.nodes.sort((a,b) => a.t - b.t);
+      drawEnvelope(el, track);
+      updateFadeReadout(el, track);
+    }
+  });
+
+  // doble clic elimina nodo (mínimo 2)
+  envCanvas.addEventListener('dblclick', e => {
+    if(track.nodes.length <= 2) return;
+    const rect = envCanvas.getBoundingClientRect();
+    const idx = nearestNode(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height);
+    if(idx >= 0){
+      track.nodes.splice(idx, 1);
+      drawEnvelope(el, track);
+      updateFadeReadout(el, track);
+    }
+  });
+}
+
+function attachFadeDrag(el, track, block){
+  const wrap = el.querySelector('.waveform-wrap');
+  const trimStartHandle = el.querySelector(`#trimStart-${track.id}`);
+  const trimEndHandle   = el.querySelector(`#trimEnd-${track.id}`);
+  const MIN_GAP = 0.15;
+
+  function startTrimDrag(isStart){
+    return function(downEvt){
+      downEvt.preventDefault();
+      downEvt.stopPropagation();
+      const rect = wrap.getBoundingClientRect();
+      function onMove(moveEvt){
+        const clientX = moveEvt.touches ? moveEvt.touches[0].clientX : moveEvt.clientX;
+        const t = Math.max(0, Math.min(rect.width, clientX - rect.left)) / rect.width * track.duration;
+        if(isStart){
+          track.trimStart = Math.max(0, Math.min(t, track.trimEnd - MIN_GAP));
+          track.nodes = track.nodes.filter(n => n.t > track.trimStart);
+          if(!track.nodes.length) track.nodes.push({ t: track.trimStart + (track.trimEnd - track.trimStart)*0.1, vol:1 });
+        } else {
+          track.trimEnd = Math.min(track.duration, Math.max(t, track.trimStart + MIN_GAP));
+          track.nodes = track.nodes.filter(n => n.t < track.trimEnd);
+          if(!track.nodes.length) track.nodes.push({ t: track.trimEnd - (track.trimEnd - track.trimStart)*0.1, vol:1 });
+        }
+        positionFadeHandles(el, track);
+        updateFadeReadout(el, track);
+      }
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchmove', onMove);
+      document.addEventListener('touchend', onUp);
+    };
+  }
+
+  trimStartHandle.addEventListener('mousedown', startTrimDrag(true));
+  trimStartHandle.addEventListener('touchstart', startTrimDrag(true));
+  trimEndHandle.addEventListener('mousedown', startTrimDrag(false));
+  trimEndHandle.addEventListener('touchstart', startTrimDrag(false));
+}
+
+function updateFadeReadout(el, track){
+  const readout = el.querySelector('.fade-readout');
+  const sorted = track.nodes.slice().sort((a,b) => a.t - b.t);
+  const fadeIn  = sorted.length ? (sorted[0].t - track.trimStart).toFixed(1) : '—';
+  const fadeOut = sorted.length ? (track.trimEnd - sorted[sorted.length-1].t).toFixed(1) : '—';
+  const speed   = track.speed || 1;
+  readout.innerHTML = `
+    <span>fragmento <b>${formatTime(track.trimStart)} – ${formatTime(track.trimEnd)}</b></span>
+    <span>fade in <b>${fadeIn}s</b></span>
+    <span>fade out <b>${fadeOut}s</b></span>
+    <span>dura <b>${formatTime(track.trimEnd - track.trimStart)}</b></span>
+    ${speed !== 1 ? `<span>velocidad <b>${speed}×</b></span>` : ''}
+  `;
+}
+
+// ---------- Playhead animado ----------
+let playheadRaf = null;
+let playheadCtxStartTime = 0;
+let playheadTrack = null;
+let playheadEl = null;
+
+function startPlayhead(el, track){
+  stopPlayhead();
+  playheadEl = el;
+  playheadTrack = track;
+  playheadCtxStartTime = getAudioCtx().currentTime;
+
+  function tick(){
+    if(!playheadEl || !playheadTrack) return;
+    const ph = playheadEl.querySelector(`#playhead-${playheadTrack.id}`);
+    const pt = playheadEl.querySelector(`#playhead-time-${playheadTrack.id}`);
+    if(!ph) return;
+    const wrap = playheadEl.querySelector('.waveform-wrap');
+    const w = wrap.getBoundingClientRect().width;
+    const speed = playheadTrack.speed || 1;
+    const elapsed = (getAudioCtx().currentTime - playheadCtxStartTime) * speed;
+    const posInTrack = playheadTrack.trimStart + elapsed;
+    if(posInTrack >= playheadTrack.trimEnd){
+      ph.classList.remove('active');
+      if(pt) pt.classList.remove('active');
+      return;
+    }
+    const xPx = (posInTrack / playheadTrack.duration) * w;
+    ph.style.left = xPx + 'px';
+    ph.classList.add('active');
+    if(pt){
+      pt.textContent = formatTime(posInTrack) + ' / ' + formatTime(playheadTrack.trimEnd);
+      pt.style.left = Math.min(xPx, w - 70) + 'px';
+      pt.classList.add('active');
+    }
+    playheadRaf = requestAnimationFrame(tick);
+  }
+  playheadRaf = requestAnimationFrame(tick);
+}
+
+function stopPlayhead(){
+  if(playheadRaf) cancelAnimationFrame(playheadRaf);
+  playheadRaf = null;
+  if(playheadEl && playheadTrack){
+    const ph = playheadEl.querySelector(`#playhead-${playheadTrack.id}`);
+    if(ph) ph.classList.remove('active');
+    const pt = playheadEl.querySelector(`#playhead-time-${playheadTrack.id}`);
+    if(pt) pt.classList.remove('active');
+  }
+  playheadEl = null;
+  playheadTrack = null;
+}
+
+// ---------- Preview con fades aplicados ----------
+function previewTrack(track, btnEl){
+  if(currentlyPlayingTrackId === track.id){
+    if(currentlyPlayingSource) currentlyPlayingSource.stop();
+    currentlyPlayingTrackId = null;
+    btnEl.textContent = '▶';
+    stopPlayhead();
+    return;
+  }
+  if(currentlyPlayingSource){
+    currentlyPlayingSource.stop();
+  }
+  stopPlayhead();
+  document.querySelectorAll('.play-btn').forEach(b => b.textContent = '▶');
+
+  const ctx = getAudioCtx();
+  const src = ctx.createBufferSource();
+  src.buffer = track.buffer;
+  src.playbackRate.value = track.speed || 1;
+  const gain = ctx.createGain();
+  src.connect(gain).connect(ctx.destination);
+
+  const now = ctx.currentTime;
+  const speed = track.speed || 1;
+  const fragmentDur = track.trimEnd - track.trimStart;
+  const envelope = getFullEnvelope(track);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  envelope.forEach(({t, vol}) => {
+    const relT = (t - track.trimStart) / speed;
+    gain.gain.linearRampToValueAtTime(Math.max(0.0001, vol), now + relT);
+  });
+
+  src.start(now, track.trimStart, fragmentDur);
+  currentlyPlayingSource = src;
+  currentlyPlayingTrackId = track.id;
+  btnEl.textContent = '■';
+
+  const trackEl = document.querySelector(`[data-track-id="${track.id}"]`);
+  if(trackEl) startPlayhead(trackEl, track);
+
+  src.onended = () => {
+    if(currentlyPlayingTrackId === track.id){
+      currentlyPlayingTrackId = null;
+      btnEl.textContent = '▶';
+      stopPlayhead();
+    }
+  };
+}
+
+// ---------- Modal editar / eliminar momento ----------
+function openBlockEditModal(block){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+
+  function showEdit(){
+    modal.innerHTML = `
+      <h2>Editar momento</h2>
+      <input class="modal-input" id="modalNameInput" type="text" value="${escapeHtml(block.name)}" />
+      <div class="modal-row space-between">
+        <button class="btn btn-ghost" id="mCancelBtn">Cancelar</button>
+        <button class="btn btn-primary" id="mSaveBtn">Guardar nombre</button>
+      </div>
+      <hr class="modal-divider">
+      <button class="btn" id="mDeleteBtn" style="width:100%;color:var(--danger);border-color:var(--danger);">🗑 Eliminar este momento</button>
+    `;
+    setTimeout(() => document.getElementById('modalNameInput').focus(), 30);
+    document.getElementById('mCancelBtn').onclick = () => overlay.remove();
+    document.getElementById('mSaveBtn').onclick = () => {
+      const v = document.getElementById('modalNameInput').value.trim();
+      if(v){ block.name = v; renderAll(); }
+      overlay.remove();
+    };
+    document.getElementById('mDeleteBtn').onclick = () => {
+      if(block.tracks.length === 0) deleteBlock();
+      else showConfirm();
+    };
+  }
+
+  function showConfirm(){
+    const n = block.tracks.length;
+    modal.innerHTML = `
+      <h2>¿Eliminar "${escapeHtml(block.name)}"?</h2>
+      <p>Este momento tiene ${n} canción${n !== 1 ? 'es' : ''}. Si lo eliminas perderás toda su configuración.</p>
+      <div class="modal-row">
+        <button class="btn btn-ghost" id="mBackBtn">Volver</button>
+        <button class="btn btn-danger" id="mConfirmBtn">Eliminar momento</button>
+      </div>
+    `;
+    document.getElementById('mBackBtn').onclick = showEdit;
+    document.getElementById('mConfirmBtn').onclick = deleteBlock;
+  }
+
+  function deleteBlock(){
+    const idx = blocks.findIndex(b => b.id === block.id);
+    blocks.splice(idx, 1);
+    if(blocks.length === 0){
+      blocks.push({ id: crypto.randomUUID(), name: 'Momento 1', crossfade: false, crossfadeSec: 3, repeat: false, tracks: [] });
+    }
+    activeBlockId = blocks[Math.max(0, idx - 1)].id;
+    overlay.remove();
+    renderAll();
+  }
+
+  showEdit();
+}
+
+// ---------- Render general ----------
+function renderAll(){
+  renderBlockNav();
+  renderBlockContent();
+}
+
+renderAll();
+
+
+// ====================================================================
+// MOTOR DE EXPORTACIÓN
+// ====================================================================
+
+function showProgress(text){
+  document.getElementById('progressText').textContent = text;
+  document.getElementById('progressOverlay').classList.add('show');
+}
+function hideProgress(){
+  document.getElementById('progressOverlay').classList.remove('show');
+}
+
+// Renderiza un track aplicando velocidad + envolvente de nodos via OfflineAudioContext
+async function applyTrimFadesAndSpeed(track){
+  const speed = track.speed || 1;
+  const trimDur = track.trimEnd - track.trimStart;
+  const outputDur = trimDur / speed;
+  const sr = track.buffer.sampleRate;
+  const totalSamples = Math.max(1, Math.ceil(outputDur * sr));
+
+  const offCtx = new OfflineAudioContext(track.buffer.numberOfChannels, totalSamples, sr);
+  const src = offCtx.createBufferSource();
+  src.buffer = track.buffer;
+  src.playbackRate.value = speed;
+
+  const gain = offCtx.createGain();
+  const envelope = getFullEnvelope(track);
+  gain.gain.setValueAtTime(0.0001, 0);
+  envelope.forEach(({t, vol}) => {
+    const relT = (t - track.trimStart) / speed;
+    gain.gain.linearRampToValueAtTime(Math.max(0.0001, vol), relT);
+  });
+
+  src.connect(gain).connect(offCtx.destination);
+  src.start(0, track.trimStart, trimDur);
+  return await offCtx.startRendering();
+}
+
+// Implementación de crossfade correcta: en vez de sumar e intentar corregir,
+// generamos sample por sample con ambas curvas de ganancia aplicadas antes de sumar.
+function mergeBuffersWithProperCrossfade(buffersWithFades, crossfadeSec, useCrossfade, ctx){
+  const sr = buffersWithFades[0].sampleRate;
+  const numChannels = Math.max(...buffersWithFades.map(b => b.numberOfChannels));
+  const crossfadeSamples = useCrossfade ? Math.floor(crossfadeSec * sr) : 0;
+
+  if(!useCrossfade){
+    let totalLength = buffersWithFades.reduce((sum,b) => sum + b.length, 0);
+    const outBuffer = ctx.createBuffer(numChannels, totalLength, sr);
+    let offset = 0;
+    buffersWithFades.forEach(b => {
+      for(let ch=0; ch<numChannels; ch++){
+        const srcData = b.getChannelData(Math.min(ch, b.numberOfChannels-1));
+        outBuffer.getChannelData(ch).set(srcData, offset);
+      }
+      offset += b.length;
+    });
+    return outBuffer;
+  }
+
+  let totalLength = buffersWithFades.reduce((sum,b) => sum + b.length, 0) - crossfadeSamples * (buffersWithFades.length - 1);
+  const outBuffer = ctx.createBuffer(numChannels, totalLength, sr);
+  for(let ch=0; ch<numChannels; ch++){
+    const outData = outBuffer.getChannelData(ch);
+    let writePos = 0;
+    for(let idx=0; idx<buffersWithFades.length; idx++){
+      const srcData = buffersWithFades[idx].getChannelData(Math.min(ch, buffersWithFades[idx].numberOfChannels-1));
+      const len = srcData.length;
+      const isLast = idx === buffersWithFades.length - 1;
+      const isFirst = idx === 0;
+
+      for(let i=0;i<len;i++){
+        let gain = 1;
+        if(!isFirst && i < crossfadeSamples){
+          gain = (i + 1) / crossfadeSamples; // entrando
+        }
+        if(!isLast && i >= len - crossfadeSamples){
+          const overlapIndex = i - (len - crossfadeSamples);
+          gain *= 1 - (overlapIndex + 1) / crossfadeSamples; // saliendo
+        }
+        const pos = writePos + i;
+        if(pos < outData.length){
+          outData[pos] += srcData[i] * gain;
+        }
+      }
+      writePos += isLast ? len : len - crossfadeSamples;
+    }
+  }
+  return outBuffer;
+}
+
+// Codifica un AudioBuffer a WAV (PCM 16 bit) — formato universal, sin dependencias externas
+function bufferToWav(buffer){
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const numFrames = buffer.length;
+  const bytesPerSample = 2;
+  const blockAlign = numChannels * bytesPerSample;
+  const dataSize = numFrames * blockAlign;
+  const bufferSize = 44 + dataSize;
+
+  const arrBuf = new ArrayBuffer(bufferSize);
+  const view = new DataView(arrBuf);
+
+  function writeString(offset, str){
+    for(let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i));
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, bufferSize - 8, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  const channelData = [];
+  for(let ch=0; ch<numChannels; ch++) channelData.push(buffer.getChannelData(ch));
+
+  let offset = 44;
+  for(let i=0;i<numFrames;i++){
+    for(let ch=0; ch<numChannels; ch++){
+      let sample = channelData[ch][i];
+      sample = Math.max(-1, Math.min(1, sample));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
+    }
+  }
+
+  return new Blob([arrBuf], { type: 'audio/wav' });
+}
+
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function sanitizeFilename(name){
+  return name.replace(/[^a-zA-Z0-9 _\-]/g, '').trim() || 'pista';
+}
+
+document.getElementById('downloadListBtn').onclick = () => {
+  if(blocks.every(b => b.tracks.length === 0)){ alert('No hay canciones en ningún momento todavía.'); return; }
+
+  const date = new Date().toLocaleDateString('es', { day: '2-digit', month: 'long', year: 'numeric' });
+  let lines = [];
+  lines.push('CINTA — Lista de Playlist');
+  lines.push(date);
+  lines.push('');
+
+  blocks.forEach(block => {
+    if(block.tracks.length === 0) return;
+    lines.push('▸ ' + block.name.toUpperCase());
+    block.tracks.forEach((t, i) => {
+      const dur = t.buffer ? formatTime(t.trimEnd - t.trimStart) : '—';
+      lines.push(`  ${(i+1).toString().padStart(2, '0')}. ${t.name}  [${dur}]`);
+    });
+    lines.push('');
+  });
+
+  const totalTracks = blocks.reduce((sum, b) => sum + b.tracks.length, 0);
+  lines.push(`Total: ${totalTracks} canción${totalTracks !== 1 ? 'es' : ''} en ${blocks.filter(b => b.tracks.length > 0).length} momento${blocks.filter(b => b.tracks.length > 0).length !== 1 ? 's' : ''}`);
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  downloadBlob(blob, 'playlist-cinta.txt');
+};
+
+document.getElementById('exportMergedBtn').onclick = async () => {
+  const block = getActiveBlock();
+  if(!block || block.tracks.length === 0){ alert('Este momento no tiene canciones todavía.'); return; }
+  if(block.tracks.some(t => !t.buffer)){ alert('Espera a que terminen de cargar todas las canciones.'); return; }
+
+  showProgress('Aplicando fades…');
+  await new Promise(r => setTimeout(r, 50));
+
+  const fadedBuffers = [];
+  for(const t of block.tracks){
+    fadedBuffers.push(await applyTrimFadesAndSpeed(t));
+  }
+
+  showProgress('Mezclando canciones…');
+  await new Promise(r => setTimeout(r, 50));
+  const merged = mergeBuffersWithProperCrossfade(fadedBuffers, block.crossfadeSec, block.crossfade, getAudioCtx());
+
+  showProgress('Generando archivo de audio…');
+  await new Promise(r => setTimeout(r, 50));
+  const wavBlob = bufferToWav(merged);
+
+  hideProgress();
+  downloadBlob(wavBlob, `${sanitizeFilename(block.name)}.wav`);
+};
+
+document.getElementById('exportFolderBtn').onclick = async () => {
+  const block = getActiveBlock();
+  if(!block || block.tracks.length === 0){ alert('Este momento no tiene canciones todavía.'); return; }
+  if(block.tracks.some(t => !t.buffer)){ alert('Espera a que terminen de cargar todas las canciones.'); return; }
+
+  showProgress('Aplicando fades a cada canción…');
+
+  for(let i=0; i<block.tracks.length; i++){
+    const t = block.tracks[i];
+    showProgress(`Exportando ${i+1} de ${block.tracks.length}: ${t.name}`);
+    await new Promise(r => setTimeout(r, 30));
+    const faded = await applyTrimFadesAndSpeed(t);
+    const wavBlob = bufferToWav(faded);
+    const order = (i+1).toString().padStart(2, '0');
+    downloadBlob(wavBlob, `${order} - ${sanitizeFilename(t.name)}.wav`);
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  hideProgress();
+};
+
+</script>
+</body>
+</html>
